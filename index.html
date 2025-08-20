@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulación API</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    pre { background: #f4f4f4; padding: 15px; border-radius: 5px; }
+    button { padding: 10px 15px; }
+  </style>
+</head>
+<body>
+  <h1>Simulación de API Aeroméxico</h1>
+  <button onclick="llamarAPI()">Ejecutar request</button>
+  <h2>Response:</h2>
+  <pre id="output">Esperando respuesta...</pre>
+
+  <script>
+    async function llamarAPI() {
+      const output = document.getElementById("output");
+      output.textContent = "Cargando...";
+
+      try {
+        const response = await fetch("https://amx-c-slfcmbk-pd.aeromexico.com/sc/paxlist/security", {
+          method: "POST",
+          headers: {
+            "channel": "web",
+            "x-transactionId": "25ac73a1-2040-4b5b-8ee1-808d8fcb4b9d",
+            "Authorization": "eyJraWQiOiI5ZGJiMDdkMC0wMWY5LTExZjAtOTBkZC00MTM3MmI1YWQ3OTAiLCJhbGciOiJSUzI1NiJ9.eyJjbGllbnRfaWQiOiJkYjk4OTI2OS0wNzlkLTQ5N2YtOTAwOC1kZDA2NWJhMzU2MGEiLCJpc3MiOiJodHRwczovL2F1dGgucGluZ29uZS5jb20vNTI1MTFiMDMtYjJkYS00ZGFkLWFjOGMtNzYxMzczNTkyOWUzL2FzIiwianRpIjoiY2FiYTdiMzQtYjk4YS00MzRlLWJhOGEtYjY3YWNkNWU5MDBkIiwiaWF0IjoxNzU1NjY3NTAwLCJleHAiOjE3NTU2NzExMDAsImF1ZCI6WyJodHRwczovL3d3dy5hZXJvbWV4aWNvLmNvbSJdLCJzY29wZSI6ImFteDphbS1zYy1wYXgtbGlzdDovc2MvcGF4bGlzdC9zZWN1cml0eSBhbXg6YW0tc2MtcGF4LW9mZi1sb2FkOi9zYy9wYXhvZmZsb2FkL3NlY3VyaXR5IiwiZW52IjoiNTI1MTFiMDMtYjJkYS00ZGFkLWFjOGMtNzYxMzczNTkyOWUzIiwib3JnIjoiZmFlZmU1ODItZWRhNS00NDMzLWFkY2EtMWY5MjVhMjhmMTFiIiwicDEucmlkIjoiY2FiYTdiMzQtYjk4YS00MzRlLWJhOGEtYjY3YWNkNWU5MDBkIn0.Zr7y5WLPC3zFtfYwRWSsxCUTZcw7GBfHl_Q9LSU-1RnHai1dkq1NNUbTfbVPS9NpnLxATOc_U8sCkIYyc9KsGM0qAalWV6I3SUfnYKcH8o9XsLUcfVUcMFXkMNh2pWDIx6zjReZxzKeRMF8Y--Rbm-omE0m-K_HTkxPbxL7-isECiVagdp0cjId-e6e0NTPnphWnEJLX47NfVHw6anWCi0uZJpHnYpFUd1OY6weWmWUhH5XdoV0XjNev64bsc8ADHboWlT5r0cxAn9mYia0coXfcQFLVSwGGJPyCGWigowEVjwGIeWmezCDGRmY0Ga4wD7qjYM2kCjncuDbKTzDwEQ",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            "pnr": "HBCNZAl",
+            "airline": "AM",
+            "departureAirport": "MTY",
+            "arrivalAirport": "MEX",
+            "departureDate": "2025-08-19",
+            "flightNumber": "965"
+          })
+        });
+
+        const data = await response.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        output.textContent = "Error: " + error;
+      }
+    }
+  </script>
+</body>
+</html>
