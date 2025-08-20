@@ -1,50 +1,228 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Simulación API</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simulación API Aeroméxico</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 30px; }
-    pre { background: #f4f4f4; padding: 15px; border-radius: 5px; }
-    button { padding: 10px 15px; }
+    :root { --gap: 12px; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color:#111; }
+    h1 { margin-bottom: 6px; }
+    p.hint { margin: 0 0 20px; font-size: 0.95rem; color:#444; }
+    form { display: grid; gap: var(--gap); max-width: 780px; grid-template-columns: repeat(6, 1fr); }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 0.9rem; color: #333; }
+    .field input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; }
+    .col-2 { grid-column: span 2; }
+    .col-3 { grid-column: span 3; }
+    .col-4 { grid-column: span 4; }
+    .col-6 { grid-column: span 6; }
+    button { padding: 12px 16px; border: none; border-radius: 10px; background: #0a6cff; color: white; font-weight: 600; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    pre { background: #0b1020; color: #e6edf3; padding: 16px; border-radius: 10px; overflow:auto; max-width:100%; white-space: pre-wrap; word-wrap: break-word; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background:#f2f2f2; padding:2px 6px; border-radius:6px; border:1px solid #e5e5e5; }
+    .meta { margin: 14px 0; font-size: .95rem; color:#333 }
+    .footer { margin-top: 8px; color:#666; font-size: 0.9rem; }
   </style>
 </head>
 <body>
   <h1>Simulación de API Aeroméxico</h1>
-  <button onclick="llamarAPI()">Ejecutar request</button>
-  <h2>Response:</h2>
+  <p class="hint">Ingresa los datos y enviaré un <span class="kbd">POST</span> a la URL configurada. En cada petición se genera un UUID nuevo para el header <span class="kbd">x-transactionId</span>.</p>
+
+  <form id="apiForm">
+    <div class="field col-6">
+      <label for="endpoint">Endpoint</label>
+      <input id="endpoint" name="endpoint" type="url" value="https://amx-c-slfcmbk-pd.aeromexico.com/sc/paxlist/security" required />
+    </div>
+
+    <div class="field col-2">
+      <label for="pnr">PNR</label>
+      <input id="pnr" name="pnr" placeholder="HBCNZA" value="HBCNZA" required />
+    </div>
+    <div class="field col-1">
+      <label for="airline">Aerolínea</label>
+      <input id="airline" name="airline" placeholder="AM" value="AM" required />
+    </div>
+    <div class="field col-1">
+      <label for="flightNumber">Vuelo</label>
+      <input id="flightNumber" name="flightNumber" placeholder="965" value="965" required />
+    </div>
+    <div class="field col-1">
+      <label for="departureAirport">Desde</label>
+      <input id="departureAirport" name="departureAirport" placeholder="MTY" value="MTY" required />
+    </div>
+    <div class="field col-1">
+      <label for="arrivalAirport">Hacia</label>
+      <input id="arrivalAirport" name="arrivalAirport" placeholder="MEX" value="MEX" required />
+    </div>
+
+    <div class="field col-2">
+      <label for="departureDate">Fecha de salida</label>
+      <input id="departureDate" name="departureDate" type="date" value="2025-08-19" required />
+    </div>
+
+    <div class="field col-2">
+      <label for="channel">Channel</label>
+      <input id="channel" name="channel" value="web" />
+    </div>
+
+    <div class="field col-4">
+      <label for="authorization">Authorization (cuadro de texto)</label>
+      <input id="authorization" name="authorization" placeholder="Bearer &lt;token&gt; o JWT literal" />
+    </div>
+
+    <div class="field col-6">
+      <button id="submitBtn" type="submit">Ejecutar request</button>
+    </div>
+  </form>
+
+  <div class="meta" id="meta"></div>
+
+  <h2>Response</h2>
+  <div class="row" style="gap:8px; margin-bottom:10px;">
+    <button id="toggleParsed">Ver RAW</button>
+    <button id="copyResponse">Copiar respuesta</button>
+  </div>
   <pre id="output">Esperando respuesta...</pre>
 
-  <script>
-    async function llamarAPI() {
-      const output = document.getElementById("output");
-      output.textContent = "Cargando...";
+  <details style="margin-top:12px;">
+    <summary><strong>Response headers</strong></summary>
+    <pre id="respHeaders">(vacío)</pre>
+  </details>
 
-      try {
-        const response = await fetch("https://amx-c-slfcmbk-pd.aeromexico.com/sc/paxlist/security", {
-          method: "POST",
-          headers: {
-            "channel": "web",
-            "x-transactionId": "25ac73a1-2040-4b5b-8ee1-808d8fcb4b9d",
-            "Authorization": "eyJraWQiOiI5ZGJiMDdkMC0wMWY5LTExZjAtOTBkZC00MTM3MmI1YWQ3OTAiLCJhbGciOiJSUzI1NiJ9.eyJjbGllbnRfaWQiOiJkYjk4OTI2OS0wNzlkLTQ5N2YtOTAwOC1kZDA2NWJhMzU2MGEiLCJpc3MiOiJodHRwczovL2F1dGgucGluZ29uZS5jb20vNTI1MTFiMDMtYjJkYS00ZGFkLWFjOGMtNzYxMzczNTkyOWUzL2FzIiwianRpIjoiY2FiYTdiMzQtYjk4YS00MzRlLWJhOGEtYjY3YWNkNWU5MDBkIiwiaWF0IjoxNzU1NjY3NTAwLCJleHAiOjE3NTU2NzExMDAsImF1ZCI6WyJodHRwczovL3d3dy5hZXJvbWV4aWNvLmNvbSJdLCJzY29wZSI6ImFteDphbS1zYy1wYXgtbGlzdDovc2MvcGF4bGlzdC9zZWN1cml0eSBhbXg6YW0tc2MtcGF4LW9mZi1sb2FkOi9zYy9wYXhvZmZsb2FkL3NlY3VyaXR5IiwiZW52IjoiNTI1MTFiMDMtYjJkYS00ZGFkLWFjOGMtNzYxMzczNTkyOWUzIiwib3JnIjoiZmFlZmU1ODItZWRhNS00NDMzLWFkY2EtMWY5MjVhMjhmMTFiIiwicDEucmlkIjoiY2FiYTdiMzQtYjk4YS00MzRlLWJhOGEtYjY3YWNkNWU5MDBkIn0.Zr7y5WLPC3zFtfYwRWSsxCUTZcw7GBfHl_Q9LSU-1RnHai1dkq1NNUbTfbVPS9NpnLxATOc_U8sCkIYyc9KsGM0qAalWV6I3SUfnYKcH8o9XsLUcfVUcMFXkMNh2pWDIx6zjReZxzKeRMF8Y--Rbm-omE0m-K_HTkxPbxL7-isECiVagdp0cjId-e6e0NTPnphWnEJLX47NfVHw6anWCi0uZJpHnYpFUd1OY6weWmWUhH5XdoV0XjNev64bsc8ADHboWlT5r0cxAn9mYia0coXfcQFLVSwGGJPyCGWigowEVjwGIeWmezCDGRmY0Ga4wD7qjYM2kCjncuDbKTzDwEQ",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            "pnr": "HBCNZAl",
-            "airline": "AM",
-            "departureAirport": "MTY",
-            "arrivalAirport": "MEX",
-            "departureDate": "2025-08-19",
-            "flightNumber": "965"
-          })
-        });
+  <details style="margin-top:8px;">
+    <summary><strong>Request enviado</strong></summary>
+    <pre id="reqEcho">(vacío)</pre>
+  </details>
 
-        const data = await response.json();
-        output.textContent = JSON.stringify(data, null, 2);
-      } catch (error) {
-        output.textContent = "Error: " + error;
+  <h3 style="margin-top:16px;">Historial</h3>
+  <div id="history"></div>
+
+  <div class="footer">Nota: si el navegador bloquea por CORS, necesitarás un proxy o habilitar orígenes en el servidor.</div>
+
+<script>
+  const $ = (sel) => document.querySelector(sel);
+  const output = $('#output');
+  const meta = $('#meta');
+  const btn = $('#submitBtn');
+  const toggleBtn = $('#toggleParsed');
+  const copyBtn = $('#copyResponse');
+  const history = $('#history');
+  let showRaw = false;
+  let lastResponseText = '';
+
+  function uuidv4() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
+  function buildRequestBody() {
+    return {
+      pnr: $('#pnr').value.trim(),
+      airline: $('#airline').value.trim(),
+      departureAirport: $('#departureAirport').value.trim(),
+      arrivalAirport: $('#arrivalAirport').value.trim(),
+      departureDate: $('#departureDate').value,
+      flightNumber: $('#flightNumber').value.trim()
+    };
+  }
+
+  function renderOutput(parsed, rawText) {
+    if (showRaw) {
+      output.textContent = rawText;
+    } else {
+      if (parsed !== null) {
+        output.textContent = JSON.stringify(parsed, null, 2);
+      } else {
+        output.textContent = JSON.stringify({ raw: rawText }, null, 2);
       }
     }
-  </script>
+  }
+
+  async function callAPI(e) {
+    e.preventDefault();
+
+    const endpoint = $('#endpoint').value.trim();
+    const channel = $('#channel').value.trim() || 'web';
+    const authorization = $('#authorization').value.trim();
+
+    const xTid = uuidv4();
+    const headers = {
+      'channel': channel,
+      'x-transactionId': xTid,
+      'Content-Type': 'application/json'
+    };
+    if (authorization) headers['Authorization'] = authorization;
+
+    const body = buildRequestBody();
+
+    output.textContent = 'Cargando...';
+    $('#reqEcho').textContent = JSON.stringify({ url: endpoint, method: 'POST', headers, body }, null, 2);
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body)
+      });
+
+      const text = await res.text();
+      lastResponseText = text;
+
+      const hdrs = {};
+      res.headers.forEach((v, k) => { hdrs[k] = v; });
+      $('#respHeaders').textContent = JSON.stringify(hdrs, null, 2);
+
+      let parsed = null;
+      try { parsed = JSON.parse(text); } catch {}
+
+      meta.innerHTML = `
+        <div>Último <span class="kbd">x-transactionId</span>: <strong>${xTid}</strong></div>
+        <div>HTTP status: <strong>${res.status}</strong></div>
+      `;
+
+      renderOutput(parsed, text);
+
+      const card = document.createElement('pre');
+      card.style.whiteSpace = 'pre-wrap';
+      card.textContent = JSON.stringify({
+        time: new Date().toISOString(),
+        xTransactionId: xTid,
+        status: res.status,
+        request: { body },
+        response: parsed ?? { raw: text }
+      }, null, 2);
+      history.prepend(card);
+
+    } catch (err) {
+      lastResponseText = String(err);
+      output.textContent = 'Error: ' + err;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  toggleBtn.addEventListener('click', () => {
+    showRaw = !showRaw;
+    toggleBtn.textContent = showRaw ? 'Ver JSON' : 'Ver RAW';
+    let parsed = null;
+    try { parsed = JSON.parse(lastResponseText); } catch {}
+    renderOutput(parsed, lastResponseText || '(sin respuesta aún)');
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(output.textContent);
+      copyBtn.textContent = '¡Copiado!';
+      setTimeout(() => (copyBtn.textContent = 'Copiar respuesta'), 1200);
+    } catch {}
+  });
+
+  document.getElementById('apiForm').addEventListener('submit', callAPI);
+</script>
 </body>
 </html>
