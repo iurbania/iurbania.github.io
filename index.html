@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulación API Aeroméxico</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    button {
+      background: #0a6cff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      margin-top: 15px;
+    }
+    pre {
+      background: #111;
+      color: #eee;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simulación de API Aeroméxico</h1>
+
+  <form id="apiForm">
+    <label for="endpoint">Endpoint</label>
+    <input id="endpoint" type="url" value="https://amx-c-slfcmbk-pd.aeromexico.com/sc/paxlist/security" required>
+
+    <label for="pnr">PNR</label>
+    <input id="pnr" placeholder="HBCNZA" required>
+
+    <label for="airline">Aerolínea</label>
+    <input id="airline" placeholder="AM" required>
+
+    <label for="flightNumber">Vuelo</label>
+    <input id="flightNumber" placeholder="965" required>
+
+    <label for="departureAirport">Desde</label>
+    <input id="departureAirport" placeholder="MTY" required>
+
+    <label for="arrivalAirport">Hacia</label>
+    <input id="arrivalAirport" placeholder="MEX" required>
+
+    <label for="departureDate">Fecha de salida</label>
+    <input id="departureDate" type="date" value="2025-08-19" required>
+
+    <label for="channel">Channel</label>
+    <input id="channel" value="web">
+
+    <label for="authorization">Authorization</label>
+    <input id="authorization" placeholder="Bearer &lt;token&gt; o JWT literal">
+
+    <button id="submitBtn" type="submit">Ejecutar request</button>
+  </form>
+
+  <h2>Response</h2>
+  <pre id="output">Esperando respuesta...</pre>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const output = $("output");
+
+    function uuidv4() {
+      return crypto.randomUUID ? crypto.randomUUID() :
+        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0;
+          const v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+    }
+
+    async function callAPI(e) {
+      e.preventDefault();
+      output.textContent = "Cargando...";
+
+      const headers = {
+        "channel": $("channel").value.trim(),
+        "x-transactionId": uuidv4(),   // 🔹 Se genera automáticamente cada request
+        "Content-Type": "application/json"
+      };
+      if ($("authorization").value.trim()) {
+        headers["Authorization"] = $("authorization").value.trim();
+      }
+
+      const body = {
+        pnr: $("pnr").value.trim(),
+        airline: $("airline").value.trim(),
+        departureAirport: $("departureAirport").value.trim(),
+        arrivalAirport: $("arrivalAirport").value.trim(),
+        departureDate: $("departureDate").value,
+        flightNumber: $("flightNumber").value.trim()
+      };
+
+      try {
+        const res = await fetch($("endpoint").value.trim(), {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body)
+        });
+        const text = await res.text();
+        try {
+          output.textContent = JSON.stringify(JSON.parse(text), null, 2);
+        } catch {
+          output.textContent = text;
+        }
+      } catch (err) {
+        output.textContent = "Error: " + err;
+      }
+    }
+
+    $("apiForm").addEventListener("submit", callAPI);
+  </script>
+</body>
+</html>
