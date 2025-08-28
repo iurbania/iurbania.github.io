@@ -74,6 +74,7 @@
     const $ = (id) => document.getElementById(id);
     const output = $("output");
 
+    // 🔹 Generador de UUID
     function uuidv4() {
       return crypto.randomUUID ? crypto.randomUUID() :
         'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -87,9 +88,12 @@
       e.preventDefault();
       output.textContent = "Cargando...";
 
+      // Generamos Transaction ID
+      const transactionId = uuidv4();
+
       const headers = {
         "channel": $("channel").value.trim(),
-        "x-transactionId": uuidv4(),   // 🔹 Se genera automáticamente cada request
+        "x-transactionId": transactionId,  // Se usa aquí
         "Content-Type": "application/json"
       };
       if ($("authorization").value.trim()) {
@@ -106,7 +110,7 @@
       };
 
       try {
-		console.log("TransactionId generado:", transactionId);
+        console.log("TransactionId generado:", transactionId);
         const res = await fetch($("endpoint").value.trim(), {
           method: "POST",
           headers,
