@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Simulación API Aeroméxico - PaxOffload</title>
+  <title>Simulación API Aeroméxico</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     label { display: block; margin-top: 10px; font-weight: bold; }
@@ -34,35 +34,35 @@
   </style>
 </head>
 <body>
-  <h1>Simulación de API Aeroméxico - PaxOffload</h1>
+  <h1>Simulación de API Aeroméxico</h1>
 
   <form id="apiForm">
     <label for="endpoint">Endpoint</label>
-    <input id="endpoint" type="url" value="https://amx-c-slfcmbk-pd.aeromexico.com/sc/paxoffload/security" required>
+    <input id="endpoint" type="url" value="https://amx-c-slfcmbk-pd.aeromexico.com/sc/paxlist/security" required>
 
     <label for="pnr">PNR</label>
-    <input id="pnr" placeholder="MHGQTU" required>
+    <input id="pnr" placeholder="HBCNZA" required>
 
     <label for="airline">Aerolínea</label>
     <input id="airline" placeholder="AM" required>
 
     <label for="flightNumber">Vuelo</label>
-    <input id="flightNumber" placeholder="2442" required>
+    <input id="flightNumber" placeholder="965" required>
 
     <label for="departureAirport">Desde</label>
-    <input id="departureAirport" placeholder="MEX" required>
+    <input id="departureAirport" placeholder="MTY" required>
 
     <label for="arrivalAirport">Hacia</label>
-    <input id="arrivalAirport" placeholder="CPE" required>
+    <input id="arrivalAirport" placeholder="MEX" required>
 
     <label for="departureDate">Fecha de salida</label>
-    <input id="departureDate" type="date" value="2025-08-20" required>
+    <input id="departureDate" type="date" value="2025-08-19" required>
 
     <label for="channel">Channel</label>
-    <input id="channel" value="doit">
+    <input id="channel" value="web">
 
     <label for="authorization">Authorization</label>
-    <input id="authorization" placeholder="Bearer &lt;token&gt;" required>
+    <input id="authorization" placeholder="Bearer &lt;token&gt; o JWT literal">
 
     <button id="submitBtn" type="submit">Ejecutar request</button>
   </form>
@@ -87,12 +87,9 @@
       e.preventDefault();
       output.textContent = "Cargando...";
 
-      // 🔹 Generar un UUID único por cada petición
-      const transactionId = uuidv4();
-
       const headers = {
         "channel": $("channel").value.trim(),
-        "x-transactionId": transactionId,
+        "x-transactionId": uuidv4(),   // 🔹 Se genera automáticamente cada request
         "Content-Type": "application/json"
       };
       if ($("authorization").value.trim()) {
@@ -109,6 +106,7 @@
       };
 
       try {
+		console.log("TransactionId generado:", transactionId);
         const res = await fetch($("endpoint").value.trim(), {
           method: "POST",
           headers,
@@ -116,19 +114,13 @@
         });
         const text = await res.text();
         try {
-          output.textContent =
-            "TransactionId generado: " + transactionId + "\n\n" +
-            JSON.stringify(JSON.parse(text), null, 2);
+          output.textContent = JSON.stringify(JSON.parse(text), null, 2);
         } catch {
-          output.textContent =
-            "TransactionId generado: " + transactionId + "\n\n" + text;
+          output.textContent = text;
         }
       } catch (err) {
-        output.textContent =
-          "TransactionId generado: " + transactionId + "\n\nError: " + err;
+        output.textContent = "Error: " + err;
       }
-
-      console.log("TransactionId generado:", transactionId);
     }
 
     $("apiForm").addEventListener("submit", callAPI);
